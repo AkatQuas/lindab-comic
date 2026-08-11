@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="《这漫画有点傻》79 篇漫画备份合集，作者林大B">
+<title>这漫画有点傻 · 备份合集</title>
+<style>
+  /* ========== 主题变量 ========== */
+  :root {
+    --bg: #12141a;
+    --panel: #1c1f27;
+    --border: #2c3140;
+    --text: #e8eaf0;
+    --muted: #9aa3b5;
+    --accent: #ffb454;
+    --overlay: rgba(0, 0, 0, .94);
+    --radius: 8px;
+  }
+
+  /* ========== 基础 ========== */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
+                 "Microsoft YaHei", "Noto Sans SC", sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  button, select { font-family: inherit; }
+  button:focus-visible, select:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+
+  /* ========== 页头 ========== */
+  header {
+    padding: 18px 20px 14px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 { font-size: 22px; font-weight: 700; }
+  header p { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  /* ========== 控制栏 ========== */
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 14px 16px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .controls button {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 18px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: border-color .15s, color .15s;
+  }
+  .controls button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .controls button:disabled { opacity: .35; cursor: not-allowed; }
+  .controls select {
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 10px;
+    font-size: 14px;
+    max-width: 46vw;
+    cursor: pointer;
+  }
+  .counter {
+    font-size: 14px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    min-width: 72px;
+    text-align: center;
+  }
+
+  /* ========== 主视图 ========== */
+  main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .stage { position: relative; max-width: 100%; }
+  .viewer-img {
+    display: block;
+    max-width: 100%;
+    max-height: calc(100vh - 260px);
+    border-radius: 6px;
+    box-shadow: 0 6px 30px rgba(0, 0, 0, .45);
+    background: #fff;
+    cursor: zoom-in;
+    transition: opacity .15s;
+  }
+  .viewer-img.loading { opacity: .3; }
+  .noscript {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--muted);
+  }
+
+  /* ========== 页脚 ========== */
+  footer {
+    padding: 14px 20px 18px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    line-height: 1.8;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  /* ========== 全屏蒙层 ========== */
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: var(--overlay);
+    display: flex;
+    overflow: auto;
+  }
+  .lightbox[hidden] { display: none; }
+  .lb-img {
+    margin: auto;
+    max-width: 94vw;
+    max-height: calc(100vh - 120px);
+    height: auto;
+    border-radius: 4px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, .6);
+    cursor: grab;
+    user-select: none;
+    -webkit-user-drag: none;
+    transition: opacity .15s;
+  }
+  .lb-img.dragging { cursor: grabbing; }
+  .lb-img.loading { opacity: .3; }
+
+  /* 蒙层浮动按钮 */
+  .lb-close, .lb-prev, .lb-next {
+    position: fixed;
+    z-index: 101;
+    background: rgba(255, 255, 255, .08);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, .25);
+    border-radius: 10px;
+    font-size: 15px;
+    cursor: pointer;
+    padding: 9px 14px;
+    backdrop-filter: blur(4px);
+    transition: background .15s;
+  }
+  .lb-close { top: 16px; right: 16px; }
+  .lb-close:hover { background: rgba(255, 80, 80, .25); }
+  .lb-prev { left: 16px; top: 50%; transform: translateY(-50%); }
+  .lb-next { right: 16px; top: 50%; transform: translateY(-50%); }
+  .lb-prev:disabled, .lb-next:disabled { opacity: .35; cursor: not-allowed; }
+
+  /* 蒙层底部工具条 */
+  .lb-bar {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(20, 22, 28, .75);
+    border: 1px solid rgba(255, 255, 255, .18);
+    border-radius: 24px;
+    padding: 7px 12px;
+    backdrop-filter: blur(6px);
+    z-index: 101;
+    white-space: nowrap;
+  }
+  .lb-bar button {
+    background: transparent;
+    color: #fff;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 6px;
+    line-height: 1.4;
+  }
+  .lb-bar button:hover { background: rgba(255, 255, 255, .15); }
+  .lb-pct {
+    min-width: 56px;
+    text-align: center;
+    font-size: 13px;
+    color: rgba(255, 255, 255, .9);
+    font-variant-numeric: tabular-nums;
+  }
+  .lb-num { font-size: 13px; color: rgba(255, 255, 255, .7); margin-left: 6px; }
+
+  /* ========== 响应式 ========== */
+  @media (max-width: 640px) {
+    .controls { gap: 8px; padding: 10px; }
+    .controls select { max-width: 60vw; }
+    .lb-prev { left: 8px; }
+    .lb-next { right: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>这漫画有点傻 · 备份合集</h1>
+  <p>共 <span id="total">0</span> 篇 · 一次显示一篇，可通过下拉或方向键浏览</p>
+</header>
+
+<div class="controls">
+  <button id="prev" title="上一张（←）">← 上一张</button>
+  <select id="picker" aria-label="按名称选择漫画"></select>
+  <button id="next" title="下一张（→）">下一张 →</button>
+  <span id="counter" class="counter" aria-live="polite">0 / 0</span>
+</div>
+
+<main>
+  <div class="stage">
+    <img id="viewer-img" class="viewer-img" alt="" decoding="async" />
+  </div>
+</main>
+
+<div id="lightbox" class="lightbox" hidden>
+  <button id="lb-close" class="lb-close" title="关闭（Esc）">✕ 关闭</button>
+  <button id="lb-prev" class="lb-prev" title="上一张（←）">←</button>
+  <img id="lb-img" class="lb-img" alt="" decoding="async" />
+  <button id="lb-next" class="lb-next" title="下一张（→）">→</button>
+  <div class="lb-bar">
+    <button id="lb-zoom-out" title="缩小（-）">−</button>
+    <span id="lb-pct" class="lb-pct">适配</span>
+    <button id="lb-zoom-in" title="放大（+）">＋</button>
+    <button id="lb-fit" title="适应窗口（0）">⟲</button>
+    <span id="lb-num" class="lb-num">1 / 79</span>
+  </div>
+</div>
+
+<footer>
+  <p>
+    漫画版权归作者 <strong>林大B</strong> 所有 ·
+    <a href="https://space.bilibili.com/3351" target="_blank" rel="noopener">B站 @林大B</a> ·
+    <a href="https://weibo.com/u/1683963007" target="_blank" rel="noopener">微博 @林大B</a>
+  </p>
+  <p>
+    本仓库为历史备份，原抓取服务（img.manhua.weibo.com）已停止服务，图片仅供个人学习、怀旧收藏。
+    如版权方认为构成侵权，请联系仓库维护者，我们会在确认后第一时间移除相关内容。
+  </p>
+</footer>
+
+<noscript><p class="noscript">本页面需要启用 JavaScript 才能浏览。</p></noscript>
+
+<script src="manifest.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  /* ================= 配置 ================= */
+  const ZOOM_STEP = 1.25;            // 每次缩放的倍率
+  const ZOOM_MIN = 1;
+  const ZOOM_MAX = 8;
+  const DBLCLICK_ZOOM = 2;           // 双击切换的倍率
+  const PRELOAD_RANGE = 1;           // 预加载当前图前后各几张
+
+  /* ================= DOM 引用 ================= */
+  const $ = id => document.getElementById(id);
+  const viewerImg = $('viewer-img');
+  const picker = $('picker');
+  const counterEl = $('counter');
+  const totalEl = $('total');
+  const prevBtn = $('prev');
+  const nextBtn = $('next');
+  const lightbox = $('lightbox');
+  const lbImg = $('lb-img');
+  const lbClose = $('lb-close');
+  const lbPrev = $('lb-prev');
+  const lbNext = $('lb-next');
+  const lbZoomIn = $('lb-zoom-in');
+  const lbZoomOut = $('lb-zoom-out');
+  const lbFit = $('lb-fit');
+  const lbPct = $('lb-pct');
+  const lbNum = $('lb-num');
+
+  /* ================= 状态 ================= */
+  const items = MANIFEST;
+  let current = 0;                   // 当前漫画下标
+  let mainLoadId = 0;                // 主视图加载令牌（防旧回调覆盖新图）
+  let lbLoadId = 0;                  // 蒙层加载令牌
+  let lbOpen = false;                // 蒙层是否打开
+  let zoom = null;                   // null = 适配窗口；否则为放大倍率
+  const preloaded = new Set();       // 已触发预加载的 URL
+
+  /* ================= 工具 ================= */
+  const fileName = item => item.id + item.name + '.jpg';
+  const wrap = i => (i + items.length) % items.length;
+
+  /* ================= 预加载 =================
+   * 提前把当前图前后各 PRELOAD_RANGE 张下载进浏览器缓存，
+   * 左右翻页时无需等待网络，直接命中缓存，切换丝滑。 */
+  function preloadAround(i) {
+    if (items.length < 3) return;
+    for (const offset of [-PRELOAD_RANGE, PRELOAD_RANGE]) {
+      const url = fileName(items[wrap(i + offset)]);
+      if (preloaded.has(url)) continue;   // 已预加载过，跳过
+      preloaded.add(url);
+      const im = new Image();
+      im.decoding = 'async';
+      im.src = url;
+    }
+  }
+
+  /* ================= 主视图 ================= */
+  function show(i) {
+    current = wrap(i);
+    const item = items[current];
+    const token = ++mainLoadId;
+
+    viewerImg.classList.add('loading');
+    viewerImg.onload = () => { if (token === mainLoadId) viewerImg.classList.remove('loading'); };
+    viewerImg.onerror = () => {
+      if (token !== mainLoadId) return;
+      viewerImg.classList.remove('loading');
+      viewerImg.alt = item.name + '（图片加载失败）';
+    };
+    viewerImg.src = fileName(item);
+    viewerImg.alt = item.name;
+
+    picker.value = String(current);
+    counterEl.textContent = (current + 1) + ' / ' + items.length;
+    prevBtn.disabled = nextBtn.disabled = items.length <= 1;
+    document.title = item.name + ' · 这漫画有点傻';
+
+    preloadAround(current);
+  }
+
+  /* ================= 缩放（蒙层内） ================= */
+  function applyZoom(anchorCenter) {
+    if (zoom === null) {
+      // 适配模式：交给 CSS 的 max-width / max-height 约束，保持完整可见
+      lbImg.style.width = '';
+      lbImg.style.maxWidth = '';
+      lbImg.style.maxHeight = '';
+      lbPct.textContent = '适配';
+    } else {
+      // 放大模式：按自然尺寸比例放大，解除一切尺寸上限
+      lbImg.style.width = Math.round(lbImg.naturalWidth * zoom) + 'px';
+      lbImg.style.maxWidth = 'none';
+      lbImg.style.maxHeight = 'none';
+      lbPct.textContent = Math.round(zoom * 100) + '%';
+    }
+    if (anchorCenter) {
+      lightbox.scrollLeft = (lightbox.scrollWidth - lightbox.clientWidth) / 2;
+      lightbox.scrollTop = (lightbox.scrollHeight - lightbox.clientHeight) / 2;
+    }
+  }
+
+  function zoomBy(factor) {
+    const base = zoom === null ? 1 : zoom;
+    const next = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(base * factor * 100) / 100));
+    zoom = next === 1 ? null : next;
+    applyZoom(true);
+  }
+
+  function resetZoom() {
+    zoom = null;
+    applyZoom(false);
+  }
+
+  /* ================= 全屏蒙层 ================= */
+  function showLightbox(i) {
+    current = wrap(i);
+    const item = items[current];
+    const token = ++lbLoadId;
+
+    resetZoom();
+    lightbox.scrollTop = lightbox.scrollLeft = 0;
+    lbImg.classList.add('loading');
+    lbImg.onload = () => {
+      if (token !== lbLoadId) return;
+      lbImg.classList.remove('loading');
+      applyZoom(false);
+    };
+    lbImg.onerror = () => { if (token === lbLoadId) lbImg.classList.remove('loading'); };
+    lbImg.src = fileName(item);
+    lbImg.alt = item.name;
+
+    lbNum.textContent = (current + 1) + ' / ' + items.length;
+    lbPrev.disabled = lbNext.disabled = items.length <= 1;
+    lightbox.hidden = false;
+    document.body.style.overflow = 'hidden';
+    lbOpen = true;
+
+    preloadAround(current);
+  }
+
+  function hideLightbox() {
+    lightbox.hidden = true;
+    document.body.style.overflow = '';
+    lbOpen = false;
+    show(current); // 关闭后主视图同步到当前漫画
+  }
+
+  /* ================= 事件绑定 ================= */
+  prevBtn.addEventListener('click', () => show(current - 1));
+  nextBtn.addEventListener('click', () => show(current + 1));
+  picker.addEventListener('change', () => show(Number(picker.value)));
+
+  viewerImg.addEventListener('click', () => showLightbox(current));
+  lbClose.addEventListener('click', hideLightbox);
+  lbPrev.addEventListener('click', () => showLightbox(current - 1));
+  lbNext.addEventListener('click', () => showLightbox(current + 1));
+  lightbox.addEventListener('click', e => { if (e.target === lightbox) hideLightbox(); });
+
+  lbZoomIn.addEventListener('click', () => zoomBy(ZOOM_STEP));
+  lbZoomOut.addEventListener('click', () => zoomBy(1 / ZOOM_STEP));
+  lbFit.addEventListener('click', () => resetZoom());
+
+  // 双击切换「适配 ↔ 2 倍」
+  lbImg.addEventListener('dblclick', e => {
+    e.preventDefault();
+    zoom = zoom === null ? DBLCLICK_ZOOM : null;
+    applyZoom(true);
+  });
+
+  // Ctrl/Cmd + 滚轮缩放；普通滚轮保留原生翻页
+  lightbox.addEventListener('wheel', e => {
+    if (!e.ctrlKey && !e.metaKey) return;
+    e.preventDefault();
+    zoomBy(e.deltaY < 0 ? ZOOM_STEP : 1 / ZOOM_STEP);
+  }, { passive: false });
+
+  // 鼠标按住拖动平移（触屏走原生滚动）
+  let dragging = false;
+  let dragX = 0, dragY = 0, scrollX = 0, scrollY = 0;
+  lbImg.addEventListener('mousedown', e => {
+    dragging = true;
+    dragX = e.clientX; dragY = e.clientY;
+    scrollX = lightbox.scrollLeft; scrollY = lightbox.scrollTop;
+    lbImg.classList.add('dragging');
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    lightbox.scrollLeft = scrollX - (e.clientX - dragX);
+    lightbox.scrollTop = scrollY - (e.clientY - dragY);
+  });
+  document.addEventListener('mouseup', () => {
+    if (dragging) { dragging = false; lbImg.classList.remove('dragging'); }
+  });
+
+  // 键盘：主视图 ← → 翻页；蒙层内 Esc 关闭、← → 翻页、+/- 缩放、0 适配
+  document.addEventListener('keydown', e => {
+    if (e.target === picker && !lbOpen) return; // 下拉列表聚焦时不劫持方向键
+    if (!lbOpen) {
+      if (e.key === 'ArrowLeft') show(current - 1);
+      if (e.key === 'ArrowRight') show(current + 1);
+      return;
+    }
+    if (e.key === 'Escape') hideLightbox();
+    else if (e.key === 'ArrowLeft') showLightbox(current - 1);
+    else if (e.key === 'ArrowRight') showLightbox(current + 1);
+    else if (e.key === '+' || e.key === '=') zoomBy(ZOOM_STEP);
+    else if (e.key === '-' || e.key === '_') zoomBy(1 / ZOOM_STEP);
+    else if (e.key === '0') resetZoom();
+  });
+
+  /* ================= 初始化 ================= */
+  totalEl.textContent = items.length;
+  items.forEach((item, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = item.id + '. ' + item.name;
+    picker.appendChild(opt);
+  });
+  show(0);
+})();
+</script>
+</body>
+</html>
